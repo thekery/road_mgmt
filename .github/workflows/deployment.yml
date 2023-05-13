@@ -42,20 +42,21 @@ jobs:
     
     - name: Deploy to AWS instance
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
-          sudo apt update
-          sudo apt install apache2 -y
-          sudo apt install php libapache2-mod-php php-mysql -y
-          curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
-          git clone git@github.com:Elsilaves/road_mgmt.git
-          cd road_mgmt
-          git pull origin master
-          composer install
-          cp .env.example .env
-          php artisan key:generate
-          php artisan migrate
-          sudo chown -R www-data:www-data .
-          sudo chmod -R 755 .
-          # Copy Laravel app into Apache directory
-          sudo cp -r * /var/www/html
-        "
+          ssh -o StrictHostKeyChecking=no -i ~/sshdir/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
+            sudo apt update
+            sudo apt install apache2 -y
+            sudo apt install php libapache2-mod-php php-mysql -y
+            curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+            git clone git@github.com:Elsilaves/road_mgmt.git
+            cd road_mgmt
+            git pull origin master
+            composer install
+            cp .env.example .env
+            php artisan key:generate
+            php artisan migrate
+            sudo chown -R www-data:www-data .
+            sudo chmod -R 755 .
+            # Copy Laravel app into Apache directory
+            sudo cp -r * /var/www/html
+          "
+      
