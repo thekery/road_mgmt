@@ -42,7 +42,7 @@ jobs:
     
     - name: Deploy to AWS instance
       run: |
-          ssh -o StrictHostKeyChecking=no -i ~/sshdir/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
+          ssh -v -o StrictHostKeyChecking=no -i ~/sshdir/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
             # Add GitHub's host keys to known_hosts
             mkdir -p ~/.ssh
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts
