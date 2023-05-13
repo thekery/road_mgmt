@@ -36,7 +36,8 @@ jobs:
     
     - name: Run ssh-keyscan
       run: |
-          ssh-keyscan -v -H ${{ secrets.SERVER_IP }} >> ~/sshdir/known_hosts
+        ssh-keyscan -v ${{ secrets.SERVER_IP }}
+      
       
     
     - name: Deploy to AWS instance
