@@ -43,6 +43,10 @@ jobs:
     - name: Deploy to AWS instance
       run: |
           ssh -o StrictHostKeyChecking=no -i ~/sshdir/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
+            # Add GitHub's host keys to known_hosts
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+      
             sudo apt update
             sudo apt install apache2 -y
             sudo apt install php libapache2-mod-php php-mysql -y
@@ -59,4 +63,5 @@ jobs:
             # Copy Laravel app into Apache directory
             sudo cp -r * /var/www/html
           "
+      
       
