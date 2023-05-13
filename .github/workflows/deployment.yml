@@ -19,13 +19,20 @@ jobs:
       env:
         SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY }}
       run: |
-        if [ ! -d ~/.ssh ]; then
-          mkdir ~/.ssh
+        echo "Current directory:"
+        pwd
+        echo "Listing contents of home directory:"
+        ls -la ~
+        if [ ! -d ~/sshdir ]; then
+          echo "Directory doesn't exist, creating it now."
+          mkdir ~/sshdir
         fi
-        chmod 700 ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+        echo "Listing contents of home directory after potential mkdir:"
+        ls -la ~
+        chmod 700 ~/sshdir
+        echo "$SSH_PRIVATE_KEY" > ~/sshdir/id_rsa
+        chmod 600 ~/sshdir/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/sshdir/known_hosts
 
     - name: Deploy to AWS instance
       run: |
