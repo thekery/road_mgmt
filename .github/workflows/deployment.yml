@@ -15,25 +15,29 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Setup SSH
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY }}
+    - name: Setup SSH directory
       run: |
-        echo "Current directory:"
-        pwd
-        echo "Listing contents of home directory:"
-        ls -la ~
         if [ ! -d ~/sshdir ]; then
           echo "Directory doesn't exist, creating it now."
           mkdir ~/sshdir
+          echo "Listing contents of home directory after potential mkdir:"
+          ls -la ~
         fi
-        echo "Listing contents of home directory after potential mkdir:"
-        ls -la ~
-        chmod 700 ~/sshdir
+    
+    - name: Set up SSH key
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY }}
+      run: |
         echo "$SSH_PRIVATE_KEY" > ~/sshdir/id_rsa
+    
+    - name: Set permissions on SSH key
+      run: |
         chmod 600 ~/sshdir/id_rsa
+    
+    - name: Run ssh-keyscan
+      run: |
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/sshdir/known_hosts
-
+    
     - name: Deploy to AWS instance
       run: |
         ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
