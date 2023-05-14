@@ -26,23 +26,21 @@ jobs:
     
     - name: Set up SSH key
       env:
-        SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY }}
+        SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY}}
       run: |
-        echo "$SSH_PRIVATE_KEY" > ~/sshdir/id_rsa
+        echo "$SSH_PRIVATE_KEY" > ~/sshdir/GILVER_ADMIN_KEY
     
     - name: Set permissions on SSH key
       run: |
-        chmod 600 ~/sshdir/id_rsa
+        chmod 600 ~/sshdir/GILVER_ADMIN_KEY
     
     - name: Run ssh-keyscan
       run: |
-        ssh-keyscan -v ${{ secrets.SERVER_IP }}
+        ssh-keyscan -v ${{ secrets.SERVER_IP}}
       
-      
-    
     - name: Deploy to AWS instance
       run: |
-          ssh -v -o StrictHostKeyChecking=no -i ~/sshdir/id_rsa ubuntu@${{ secrets.SERVER_IP }} "
+          ssh -v -o StrictHostKeyChecking=no -i ~/sshdir/GILVER_ADMIN_KEY ubuntu@${{ secrets.SERVER_IP }} "
             # Add GitHub's host keys to known_hosts
             mkdir -p ~/.ssh
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts
@@ -63,5 +61,3 @@ jobs:
             # Copy Laravel app into Apache directory
             sudo cp -r * /var/www/html
           "
-      
-      
