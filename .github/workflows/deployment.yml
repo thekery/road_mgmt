@@ -17,52 +17,49 @@ jobs:
 
     - name: Setup SSH directory
       run: |
-        if [ ! -d ~/sshdir ]; then
-          echo "Directory doesn't exist, creating it now."
-          mkdir ~/sshdir
-          echo "Listing contents of home directory after potential mkdir:"
-          ls -la ~
-        fi
-    
+        mkdir -p ~/.ssh
+
     - name: Set up SSH key
       env:
         SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY}}
       run: |
-        echo "$SSH_PRIVATE_KEY" > ~/sshdir/GILVER_ADMIN_KEY
-    
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
     - name: Set permissions on SSH key
       run: |
-        chmod 600 ~/sshdir/GILVER_ADMIN_KEY
+        chmod 600 ~/.ssh/id_rsa
     
     - name: Run ssh-keyscan
       run: |
-        ssh-keyscan -v ${{ secrets.SERVER_IP}}
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
       
     - name: Deploy to AWS instance
       run: |
-          ssh -v -o StrictHostKeyChecking=no -i ~/sshdir/GILVER_ADMIN_KEY ubuntu@${{ secrets.SERVER_IP }} "
-            # Add GitHub's host keys to known_hosts
-            mkdir -p ~/.ssh
-            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-      
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} "
+            # Update system
             sudo apt update
             sudo apt install apache2 -y
             sudo apt install php libapache2-mod-php php-mysql -y
+
+            # Install Composer
             curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+
+            # Clone and update the repository
             git clone git@github.com:Elsilaves/road_mgmt.git
             cd road_mgmt
-            git pull origin master
+            git pull origin main
             composer install
             cp .env.example .env
             php artisan key:generate
             php artisan migrate
+
+            # Set permissions and copy Laravel app into Apache directory
             sudo chown -R www-data:www-data .
             sudo chmod -R 755 .
-            # Copy Laravel app into Apache directory
             sudo cp -r * /var/www/html
           "
         
       env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    
