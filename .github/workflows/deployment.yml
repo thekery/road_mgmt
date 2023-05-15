@@ -1,9 +1,10 @@
-name: CI/CD Pipeline
+name: Deploy
 
 on:
   pull_request:
+    branches:
+      - main
     types: [closed]
-    branches: [main]
 
 jobs:
   deploy:
@@ -11,18 +12,57 @@ jobs:
     if: github.event.pull_request.merged == true
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Setup SSH Key and known hosts for Server
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.GILVER_ADMIN_KEY }}
-
-    - name: SSH and Pull Repo on Server
+    - name: Setup SSH directory
       run: |
-        ssh -o StrictHostKeyChecking=no ubuntu@18.198.22.47 <<EOF
-          cd /var/www/html/road_mgmt
-          git pull origin master
-          sudo service apache2 restart
-        EOF
+        if [ ! -d ~/sshdir ]; then
+          echo "Directory doesn't exist, creating it now."
+          mkdir ~/sshdir
+          echo "Listing contents of home directory after potential mkdir:"
+          ls -la ~
+        fi
+    
+    - name: Set up SSH key
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.GILVER_ADMIN_KEY}}
+      run: |
+        echo "$SSH_PRIVATE_KEY" > ~/sshdir/GILVER_ADMIN_KEY
+    
+    - name: Set permissions on SSH key
+      run: |
+        chmod 600 ~/sshdir/GILVER_ADMIN_KEY
+    
+    - name: Run ssh-keyscan
+      run: |
+        ssh-keyscan -v ${{ secrets.SERVER_IP}}
+      
+    - name: Deploy to AWS instance
+      run: |
+          ssh -v -o StrictHostKeyChecking=no -i ~/sshdir/GILVER_ADMIN_KEY ubuntu@${{ secrets.SERVER_IP }} "
+            # Add GitHub's host keys to known_hosts
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+      
+            sudo apt update
+            sudo apt install apache2 -y
+            sudo apt install php libapache2-mod-php php-mysql -y
+            curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+            git clone git@github.com:Elsilaves/road_mgmt.git
+            cd road_mgmt
+            git pull origin master
+            composer install
+            cp .env.example .env
+            php artisan key:generate
+            php artisan migrate
+            sudo chown -R www-data:www-data .
+            sudo chmod -R 755 .
+            # Copy Laravel app into Apache directory
+            sudo cp -r * /var/www/html
+          "
+        
+      env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
