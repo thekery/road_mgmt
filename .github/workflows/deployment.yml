@@ -1,34 +1,56 @@
-name: Deploy to EC2
-
+name: Deploy
 on:
   pull_request:
     types: [closed]
-    branches: 
-      - main
-
+    branches: [main]
 jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Deploy to EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ubuntu
-        key: ${{ secrets.DEPLOY_KEY }}
-        ssh_known_hosts: github.com
-        script: |
-          cd /var/www/html
-          git pull origin main
-          composer install --no-interaction --prefer-dist --optimize-autoloader
-          php artisan migrate --force
+      - uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with: 
+          node-version: 16
+      - name: Copy .env
+        run: cp .env.example .env
+      - name: Install composer Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Install node dependencies
+        run: npm ci
+      - name: Setup Project
+        run: |
+          php artisan config:clear
           php artisan cache:clear
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-          sudo systemctl restart apache2
+          php artisan key:generate
+          npm run build
+      - name: Directory Permissions
+        run: chmod -R 755 storage bootstrap/cache
+      - name: Run Unit tests
+        env:
+          APP_ENV: testing
+          DB_HOST: ${{ secrets.DB_SECRET }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+        run: php artisan test
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            cd apps
+            cd laravel-example
+            git pull
+            npm ci
+            npm run prod
+            composer install
+            php artisan migrate --force
