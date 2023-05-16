@@ -50,7 +50,7 @@ jobs:
           script_stop: true
           script: |
             cd /var/www/html/
-            git clone git@github.com:Elsilaves/road_mgmt.git
+            sudo --preserve-env=SSH_AUTH_SOCK git clone git@github.com:Elsilaves/road_mgmt.git
             cd road_mgmt
             cp .env.example .env
             composer install --no-interaction --prefer-dist --optimize-autoloader
