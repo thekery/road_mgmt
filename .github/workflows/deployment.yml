@@ -47,10 +47,16 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script_stop: true
           script: |
-            cd apps
-            cd laravel-example
-            git pull
+            cd /var/www/html/
+            git clone git@github.com:Elsilaves/road_mgmt.git
+            cd road_mgmt
+            cp .env.example .env
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            php artisan key:generate
+            php artisan migrate --force
+            php artisan cache:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
             npm ci
             npm run prod
-            composer install
-            php artisan migrate --force
