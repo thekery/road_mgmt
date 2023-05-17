@@ -8,52 +8,41 @@ jobs:
     runs-on: self-hosted
     if: github.event.pull_request.merged == true
     steps:
-      - name: Add user to Docker group
-        run: |
-          sudo usermod -aG docker $USER
-          newgrp docker
-      - uses: actions/checkout@v2
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release -y
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-          sudo apt-get update
-          sudo apt-get install docker-ce -y
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
+          
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with: 
           node-version: 16
+  
+      - name: Install composer Dependencies
+        run: composer install --prefer-dist --no-scripts --no-progress --no-interaction
+  
+      - name: Install node dependencies
+        run: npm install && npm run production
+        
       - name: Copy .env
         run: cp .env.example .env
-      - name: Install composer Dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-      - name: Install node dependencies
+  
+      - name: Setup Laravel Project
         run: |
-          npm install
-          npm ci
-      - name: Setup Project
-        run: |
-          php artisan config:clear
-          php artisan cache:clear
           php artisan key:generate
-          npm run build
-      - name: Directory Permissions
-        run: chmod -R 755 storage bootstrap/cache
-      - name: Run Unit tests
-        env:
-          APP_ENV: testing
-          DB_HOST: ${{ secrets.DB_SECRET }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-        run: php artisan test
+          php artisan config:cache
+          php artisan migrate --force
+  
+      - name: Install and Configure Apache
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apache2
+          sudo systemctl enable apache2
+          sudo systemctl start apache2
+  
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -62,9 +51,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script_stop: true
           script: |
-            sudo /usr/bin/docker build -t 6a7b4d:5dcd1deb59984efe8a49991c2380bf52 -f "/home/***/actions-runner/_work/_actions/appleboy/ssh-action/master/Dockerfile" "/home/***/actions-runner/_work/_actions/appleboy/ssh-action/master"
             cd /var/www/html/
-            sudo --preserve-env=SSH_AUTH_SOCK git clone git@github.com:Elsilaves/road_mgmt.git
+            git clone git@github.com:Elsilaves/road_mgmt.git
             cd road_mgmt
             cp .env.example .env
             composer install --no-interaction --prefer-dist --optimize-autoloader
@@ -75,5 +63,4 @@ jobs:
             php artisan route:cache
             php artisan view:cache
             npm install
-            npm ci
             npm run prod
