@@ -41,6 +41,8 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
         run: php artisan test
+      - name: Install Apache
+        run: sudo apt-get update && sudo apt-get install -y apache2
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
