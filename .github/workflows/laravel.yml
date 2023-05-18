@@ -27,17 +27,8 @@ jobs:
           php-version: '8.1'
           extensions: mbstring, pdo_mysql # Specify your required extensions here
 
-      - name: Copy .env
-        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-
       - name: Install Dependencies
         run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-      - name: Generate key
-        run: php artisan key:generate
-
-      - name: Directory Permissions
-        run: chmod -R 777 storage bootstrap/cache
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
         run: vendor/bin/phpunit
@@ -61,24 +52,19 @@ jobs:
             git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/road_mgmt # Clone repository to /var/www/html/road_mgmt
             cd /var/www/html/road_mgmt
 
-            # Handle PHP package configuration prompts
-            echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/app-password-confirm password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/mysql/admin-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/mysql/app-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | sudo debconf-set-se
-
             # Install Composer
             curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
             sudo chmod +x /usr/local/bin/composer
 
             sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
             composer install
-            php artisan migrate
 
-            # Modify Apache's configuration to point to your Laravel app
+            cp .env.example .env
+            php artisan key:generate
+            php artisan config:cache
+
             sudo sh -c 'echo "<Directory /var/www/html/road_mgmt/public>
-                                Options Indexes FollowSymLinks
+                Options Indexes FollowSymLinks
                 AllowOverride All
                 Require all granted
             </Directory>
