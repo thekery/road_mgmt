@@ -58,8 +58,8 @@ jobs:
             sudo systemctl enable apache2
             sudo apt-get install -y git
             sudo rm -rf /var/www/html/* # Remove all the default files
-            git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/ # Clone repository to /var/www/html/
-            cd /var/www/html/
+            git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/road_mgmt # Clone repository to /var/www/html/road_mgmt
+            cd /var/www/html/road_mgmt
 
             # Handle PHP package configuration prompts
             echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
@@ -72,19 +72,19 @@ jobs:
             curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
             sudo chmod +x /usr/local/bin/composer
 
-            sudo chown -R $USER:$USER /var/www/html/ # Adjust ownership if necessary
+            sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
             composer install
             php artisan migrate
 
-                        # Modify Apache's configuration to point to your Laravel app
-            sudo sh -c 'echo "<Directory /var/www/html/public>
-                Options Indexes FollowSymLinks
+            # Modify Apache's configuration to point to your Laravel app
+            sudo sh -c 'echo "<Directory /var/www/html/road_mgmt/public>
+                                Options Indexes FollowSymLinks
                 AllowOverride All
                 Require all granted
             </Directory>
 
             <VirtualHost *:80>
-                DocumentRoot /var/www/html/public
+                DocumentRoot /var/www/html/road_mgmt/public
                 ServerName your.domain.com
                 ErrorLog ${APACHE_LOG_DIR}/error.log
                 CustomLog ${APACHE_LOG_DIR}/access.log combined
@@ -98,4 +98,3 @@ jobs:
             sudo a2enmod rewrite
             # Restart Apache to apply changes
             sudo systemctl restart apache2
-
