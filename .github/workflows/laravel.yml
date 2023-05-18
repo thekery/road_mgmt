@@ -1,47 +1,44 @@
-name: Laravelon
-on:
+name: Laravel
+
+on:  
   push:
-    branches: [ "main" ]
+    branches: [ "main" ] 
   pull_request:
     branches: [ "main" ]
 
 jobs:
   laravel-tests:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    steps: 
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    steps:
-    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+    - name: Setup PHP
+      uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
       with:
         php-version: '8.1'
-
-    - uses: actions/checkout@v3
-
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-
-    - name: Update dependencies
-      run: composer update
-
+        
     - name: Install Dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
+    
     - name: Generate key
       run: php artisan key:generate
 
-    - name: Directory Permissions
-      run: chmod -R 777 storage bootstrap/cache
-
-    - name: Execute tests (Unit and Feature tests) via PHPUnit
+    - name: Setup Database
+      run: |
+        mysql -u ${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} -h ${{ secrets.DB_HOST }} -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_DATABASE }};"
       env:
         DB_CONNECTION: mysql
         DB_HOST: ${{ secrets.DB_HOST }}
-        DB_PORT: 3306
+        DB_PORT: ${{ secrets.DB_PORT }}
         DB_DATABASE: ${{ secrets.DB_DATABASE }}
         DB_USERNAME: ${{ secrets.DB_USERNAME }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      run: vendor/bin/phpunit
+    
+    - name: Migrate and Seed Database
+      run: php artisan migrate --seed
 
-    - name: executing remote ssh commands to deploy
+    - name: Setup Server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_IP }}
@@ -49,4 +46,16 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         script: |
           git clone git@github.com:Elsilaves/road_mgmt.git
+          cd road_mgmt
+          composer install
+          php artisan migrate
 
+    - name: Execute tests (Unit and Feature tests) via PHPUnit
+      run: vendor/bin/phpunit
+      env:
+        DB_CONNECTION: mysql
+        DB_HOST: ${{ secrets.DB_HOST }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+        DB_DATABASE: ${{ secrets.DB_DATABASE }}
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
