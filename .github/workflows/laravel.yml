@@ -54,17 +54,18 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             sudo apt-get update
-            sudo apt-get install -y php # Install PHP
+            sudo apt-get install -y apache2 libapache2-mod-php php-mysql # Install Apache, PHP, and PHP MySQL extension
+            sudo systemctl enable apache2
             sudo apt-get install -y git
             git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/ # Clone repository to /var/www/html/
             cd /var/www/html/road_mgmt
 
             # Handle PHP package configuration prompts
             echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/app-password-confirm password your-app-db-password" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/mysql/admin-pass password your-mysql-root-password" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/mysql/app-pass password your-app-db-password" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/app-password-confirm password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/mysql/admin-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/mysql/app-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | sudo debconf-set-se
 
             # Install Composer
             curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
@@ -73,4 +74,27 @@ jobs:
             sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
             composer install
             php artisan migrate
+
+                # Modify Apache's configuration to point to your Laravel app
+            sudo sh -c 'echo "<Directory /var/www/html/road_mgmt/public>
+                Options Indexes FollowSymLinks
+                AllowOverride All
+                Require all granted
+            </Directory>
+
+            <VirtualHost *:80>
+                DocumentRoot /var/www/html/road_mgmt/public
+                ServerName your.domain.com
+                ErrorLog ${APACHE_LOG_DIR}/error.log
+                CustomLog ${APACHE_LOG_DIR}/access.log combined
+            </VirtualHost>" > /etc/apache2/sites-available/laravel.conf'
+
+            # Enable site
+            sudo a2ensite laravel
+            # Enable mod_rewrite
+            sudo a2enmod rewrite
+            # Restart Apache to apply changes
+            sudo systemctl restart apache2
+
+
 
