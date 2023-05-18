@@ -58,8 +58,18 @@ jobs:
             sudo apt-get install -y git
             git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/ # Clone repository to /var/www/html/
             cd /var/www/html/road_mgmt
-            curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer # Install Composer
+
+            # Handle PHP package configuration prompts
+            echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/app-password-confirm password your-app-db-password" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/mysql/admin-pass password your-mysql-root-password" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/mysql/app-pass password your-app-db-password" | sudo debconf-set-selections
+            echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | sudo debconf-set-selections
+
+            # Install Composer
+            curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
             sudo chmod +x /usr/local/bin/composer
+
             sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
             composer install
             php artisan migrate
