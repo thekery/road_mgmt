@@ -54,16 +54,13 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             sudo apt-get update
-            sudo apt-get install -y apache2 # Install Apache web server
+            sudo apt-get install -y php # Install PHP
             sudo apt-get install -y git
-            git clone git@github.com:Elsilaves/road_mgmt.git
-            cd road_mgmt
+            git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/ # Clone repository to /var/www/html/
+            cd /var/www/html/road_mgmt
+            curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer # Install Composer
+            sudo chmod +x /usr/local/bin/composer
+            sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
             composer install
             php artisan migrate
-
-            # Configure Apache for Laravel
-            sudo mv /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.backup
-            sudo cp /var/www/html/road_mgmt/apache/laravel.conf /etc/apache2/sites-available/000-default.conf
-            sudo a2enmod rewrite
-            sudo systemctl restart apache2
 
