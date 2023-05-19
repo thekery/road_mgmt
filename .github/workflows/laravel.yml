@@ -85,7 +85,7 @@ jobs:
 
               <VirtualHost *:80>
                   DocumentRoot /var/www/html/road_mgmt/public
-                  ServerName 18.185.48.3
+                  ServerName your.domain.com
                   ErrorLog \${APACHE_LOG_DIR}/error.log
                   CustomLog \${APACHE_LOG_DIR}/access.log combined
 
@@ -110,9 +110,5 @@ jobs:
           
           # Copy and update .env file
           sudo cp .env.example .env
-          sudo sed -i "s/DB_HOST=.*/DB_HOST=${{ secrets.DB_SECRET }}/" .env
-          sudo sed -i "s/DB_PORT=.*/DB_PORT=${{ secrets.DB_PORT }}/" .env
-          sudo sed -i "s/DB_DATABASE=.*/DB_DATABASE=${{ secrets.DB_DATABASE }}/" .env
-          sudo sed -i "s/DB_USERNAME=.*/DB_USERNAME=${{ secrets.DB_USERNAME }}/" .env
-          sudo sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env
-          sudo php artisan key:generate
+          sudo sed -i "s/DB_HOST=.*/DB_HOST=${{ secrets.DB_SECRET }}/"
+
