@@ -98,4 +98,12 @@
               sudo a2enmod rewrite
               # Restart Apache to apply changes
               sudo systemctl restart apache2
+              
+              # Configure .env file
+              sudo cp .env.example .env
+              sudo sed -i "s/DB_HOST=.*/DB_HOST=${{ secrets.DB_SECRET }}/" .env
+              sudo sed -i "s/DB_PORT=.*/DB_PORT=${{ secrets.DB_PORT }}/" .env
+              sudo sed -i "s/DB_DATABASE=.*/DB_DATABASE=${{ secrets.DB_DATABASE }}/" .env
+              sudo sed -i "s/DB_USERNAME=.*/DB_USERNAME=${{ secrets.DB_USERNAME }}/" .env
+              sudo sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env
 
