@@ -46,66 +46,64 @@ jobs:
     needs: [setup-env]
     runs-on: self-hosted
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            sudo apt-get update
-            sudo apt-get install -y apache2 libapache2-mod-php php-mysql # Install Apache, PHP, and PHP MySQL extension
-            sudo systemctl enable apache2
-            sudo apt-get install -y git
-            sudo rm -rf /var/www/html/* # Remove all the default files
-            git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/road_mgmt # Clone repository to /var/www/html/road_mgmt
-            cd /var/www/html/road_mgmt
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          sudo apt-get update
+          sudo apt-get install -y apache2 libapache2-mod-php php-mysql # Install Apache, PHP, and PHP MySQL extension
+          sudo systemctl enable apache2
+          sudo apt-get install -y git
+          sudo rm -rf /var/www/html/* # Remove all the default files
+          git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/road_mgmt # Clone repository to /var/www/html/road_mgmt
+          cd /var/www/html/road_mgmt
 
-            # Handle PHP package configuration prompts
-            echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/app-password-confirm password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/mysql/admin-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/mysql/app-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
-            echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | sudo debconf-set-selections
+          # Handle PHP package configuration prompts
+          echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
+          echo "phpmyadmin phpmyadmin/app-password-confirm password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
+          echo "phpmyadmin phpmyadmin/mysql/admin-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
+          echo "phpmyadmin phpmyadmin/mysql/app-pass password ${{ secrets.DB_PASSWORD }}" | sudo debconf-set-selections
+          echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | sudo debconf-set-selections
 
-            # Install Composer
-            curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
-            sudo chmod +x /usr/local/bin/composer
+          # Install Composer
+          curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+          sudo chmod +x /usr/local/bin/composer
 
-            sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
-            composer install
-            php artisan migrate
+          sudo chown -R $USER:$USER /var/www/html/road_mgmt # Adjust ownership if necessary
+          composer install
+          php artisan migrate
 
-            # Modify Apache's configuration to point to your Laravel app
-            sudo sh -c 'echo "<Directory /var/www/html/road_mgmt/public>
-                    Options Indexes FollowSymLinks
-                AllowOverride All
-                Require all granted
-            </Directory>
+          # Modify Apache's configuration to point to your Laravel app
+          sudo sh -c 'echo "<Directory /var/www/html/road_mgmt/public>
+                  Options Indexes FollowSymLinks
+                  AllowOverride All
+                  Require all granted
+              </Directory>
 
-            <VirtualHost *:80>
-                DocumentRoot /var/www/html/road_mgmt/public
-                ServerName your.domain.com
-                ErrorLog ${APACHE_LOG_DIR}/error.log
-                CustomLog ${APACHE_LOG_DIR}/access.log combined
-            </VirtualHost>" > /etc/apache2/sites-available/laravel.conf'
+              <VirtualHost *:80>
+                  DocumentRoot /var/www/html/road_mgmt/public
+                  ServerName 18.185.48.3
+                  ErrorLog \${APACHE_LOG_DIR}/error.log
+                  CustomLog \${APACHE_LOG_DIR}/access.log combined
+              </VirtualHost>" > /etc/apache2/sites-available/laravel.conf'
 
-            # Enable site
-            sudo a2ensite laravel
-            # Disable default site
-            sudo a2dissite 000-default
-            # Enable mod_rewrite
-            sudo a2enmod rewrite
-            # Restart Apache to apply changes
-            sudo systemctl restart apache2
-
-            # Configure .env file
-            sudo cp .env.example .env
-            sudo sed -i "s/DB_HOST=.*/DB_HOST=${{ secrets.DB_SECRET }}/" .env
-            sudo sed -i "s/DB_PORT=.*/DB_PORT=${{ secrets.DB_PORT }}/" .env
-            sudo sed -i "s/DB_DATABASE=.*/DB_DATABASE=${{ secrets.DB_DATABASE }}/" .env
-            sudo sed -i "s/DB_USERNAME=.*/DB_USERNAME=${{ secrets.DB_USERNAME }}/" .env
-            sudo sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env
-
-            # Add generated key to .env file
-            sudo php artisan key:generate --show >> .env
+          # Enable site
+          sudo a2ensite laravel
+          # Disable default site
+          sudo a2dissite 000-default
+          # Enable mod_rewrite
+          sudo a2enmod rewrite
+          # Restart Apache to apply changes
+          sudo systemctl restart apache2
+          
+          # Copy and update .env file
+          sudo cp .env.example .env
+          sudo sed -i "s/DB_HOST=.*/DB_HOST=${{ secrets.DB_SECRET }}/" .env
+          sudo sed -i "s/DB_PORT=.*/DB_PORT=${{ secrets.DB_PORT }}/" .env
+          sudo sed -i "s/DB_DATABASE=.*/DB_DATABASE=${{ secrets.DB_DATABASE }}/" .env
+          sudo sed -i "s/DB_USERNAME=.*/DB_USERNAME=${{ secrets.DB_USERNAME }}/" .env
+          sudo sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env
+          sudo php artisan key:generate
