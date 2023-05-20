@@ -54,7 +54,8 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         script: |
           sudo apt-get update
-          sudo apt-get install -y apache2 libapache2-mod-php php-mysql # Install Apache, PHP, and PHP MySQL extension
+          apt-get install php -y
+          sudo apt-get install php8.1-cli php8.1-common php8.1-curl php8.1-gd php8.1-json php8.1-mbstring php8.1-intl php8.1-mysql php8.1-xml php8.1-zip -y
           sudo systemctl enable apache2
           sudo apt-get install -y git
           sudo rm -rf /var/www/html/* # Remove all the default files
