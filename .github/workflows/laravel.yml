@@ -41,3 +41,18 @@ jobs:
 
       - name: Execute tests (Unit and Feature tests) via PHPUnit
         run: vendor/bin/phpunit
+
+  deploy-to-ec2:
+    needs: [setup-env]
+    runs-on: self-hosted
+    steps:
+        - name: Deploy to EC2
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.SERVER_IP }}
+            username: ${{ secrets.USERNAME }}
+            key: ${{ secrets.SSH_KEY }}
+        - name: Install Apache
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y apache2
