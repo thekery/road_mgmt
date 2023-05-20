@@ -1,0 +1,70 @@
+name: Laravel CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Setup SSH agent
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+        
+    - name: Remove existing road_mgmt directory
+      run: rm -rf road_mgmt
+
+    - name: Clone Repository
+      run: git clone git@github.com:Elsilaves/road_mgmt.git
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1.2'
+
+    - name: Install Composer Dependencies
+      run: composer install
+
+    - name: Copy Environment File
+      run: cp .env.example .env
+
+    - name: Generate Application Key
+      run: php artisan key:generate
+
+    - name: Run PHPUnit Tests
+      run: vendor/bin/phpunit
+
+    - name: Deploy to EC2
+      run: |
+        echo "${{ secrets.Pem_Key }}" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo rm -rf /var/www/html/*"
+        rsync -av -e "ssh -o StrictHostKeyChecking=no -i private_key.pem" --exclude '.git' . ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/var/www/html/road_mgmt --rsync-path="sudo rsync"
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo chown -R www-data:www-data /var/www/html/road_mgmt && sudo chmod -R 755 /var/www/html/road_mgmt/storage /var/www/html/road_mgmt/bootstrap"
+        rm private_key.pem
+
+   # - name: Update Apache Config
+   #   run: |
+   #     echo "${{ secrets.Pem_Key }}" > private_key.pem
+   #     chmod 600 private_key.pem
+   #     echo "<VirtualHost *:80>
+   #     ServerName ${SERVER_IP}
+   #     ServerAdmin webmaster@localhost
+   #     DocumentRoot /var/www/html/road_mgmt/public
+   #     <Directory /var/www/html/road_mgmt/public>
+   #         AllowOverride All
+   #         Order allow,deny
+   #         allow from all
+   #     </Directory>
+   #     ErrorLog ${APACHE_LOG_DIR}/error.log
+   #     CustomLog ${APACHE_LOG_DIR}/access.log combined
+   #     </VirtualHost>" > road_mgmt.conf
+   #     ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo a2ensite road_mgmt && sudo systemctl restart apache2"
+   #     rm private_key.pem road_mgmt.conf
