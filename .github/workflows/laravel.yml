@@ -14,14 +14,12 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: webfactory/ssh-agent@v0.5.3
       with:
-        token: ${{ secrets.TOKEN }}
-        ssh-key: ${{ secrets.SSH_KEY }}
-        persist-credentials: false
-      env:
-        HTTP_PROXY: ''
-        HTTPS_PROXY: ''
+        ssh-private-key: ${{ secrets.SSH_KEY }}
+        
+    - name: Clone Repository
+      run: git clone git@github.com:Elsilaves/road_mgmt.git
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
