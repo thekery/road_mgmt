@@ -16,7 +16,7 @@ jobs:
     - name: Checkout Repository
       uses: webfactory/ssh-agent@v0.5.3
       with:
-        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+        ssh-private-key: ${{ secrets.SSH_KEY }}
         
     - name: Clone Repository
       run: git clone git@github.com:Elsilaves/road_mgmt.git
