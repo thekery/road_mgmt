@@ -1,0 +1,25 @@
+$primary-color: lightgrey;
+$secondary-color: #f1f1f1;
+$alert-color: #d9534f;
+
+body {
+    background-color: $secondary-color;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    background-color: $primary-color;
+    color: $secondary-color;
+    padding: 20px 0;
+    text-align: center;
+
+    h1 {
+    margin: 0;
+    }
+}
