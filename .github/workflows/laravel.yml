@@ -18,17 +18,14 @@ jobs:
   setup-env:
     runs-on: self-hosted
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v2
-        with:
-          submodules: false
-
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
-          extensions: mbstring, pdo_mysql
+          extensions: mbstring, pdo_mysql # Specify your required extensions here
 
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
