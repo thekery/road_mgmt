@@ -22,7 +22,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: 'Elsilaves/road_mgmt'
-          token: ${{ secrets.GIT_TOKEN }}
           ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Setup PHP
