@@ -18,8 +18,11 @@ jobs:
   setup-env:
     runs-on: self-hosted
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          submodules: false
+
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
