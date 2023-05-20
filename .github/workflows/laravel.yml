@@ -66,6 +66,5 @@ jobs:
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
         </VirtualHost>" > road_mgmt.conf
-        scp -i private_key.pem road_mgmt.conf ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/etc/apache2/sites-available/
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo a2ensite road_mgmt && sudo systemctl restart apache2"
         rm private_key.pem road_mgmt.conf
