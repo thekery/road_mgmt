@@ -12,15 +12,16 @@ jobs:
   build:
     runs-on: self-hosted
 
-    env:
-      http_proxy: http://proxy.example.com:8080
-      https_proxy: http://proxy.example.com:8080
-
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
       with:
         token: ${{ secrets.TOKEN }}
+        ssh-key: ${{ secrets.SSH_KEY }}
+        persist-credentials: false
+      env:
+        HTTP_PROXY: ''
+        HTTPS_PROXY: ''
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
@@ -35,9 +36,6 @@ jobs:
 
     - name: Generate Application Key
       run: php artisan key:generate
-
-    # - name: Run Database Migrations
-    #   run: php artisan migrate --force
 
     - name: Run PHPUnit Tests
       run: vendor/bin/phpunit
