@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [ "main" ]
 
-env:
-  DB_CONNECTION: mysql
-  DB_HOST: ${{ secrets.DB_SECRET }}
-  DB_PORT: ${{ secrets.DB_PORT }}
-  DB_DATABASE: ${{ secrets.DB_DATABASE }}
-  DB_USERNAME: ${{ secrets.DB_USERNAME }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
 jobs:
   setup-env:
     runs-on: self-hosted
@@ -25,8 +17,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
-          extensions: mbstring, pdo_mysql # Specify your required extensions here
-
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
