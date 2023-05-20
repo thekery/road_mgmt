@@ -38,9 +38,16 @@ jobs:
     - name: Run PHPUnit Tests
       run: vendor/bin/phpunit
 
+    - name: Remove existing files in target directory
+      run: |
+        echo "${{ secrets.SSH_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "rm -rf /var/www/html/*"
+        rm private_key.pem
+
     - name: Deploy to EC2
       run: |
         echo "${{ secrets.SSH_KEY }}" > private_key.pem
         chmod 600 private_key.pem
-        rsync -av -e "ssh -o StrictHostKeyChecking=no -i private_key.pem" --exclude '.git' . ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/var/www/html
+        rsync -av -e "ssh -o StrictHostKeyChecking=no -i private_key.pem" --exclude '.git' . ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/var/www/html/
         rm private_key.pem
