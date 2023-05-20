@@ -1,19 +1,22 @@
 name: Laravel CI
 
 on:
-    push:
-      branches: [ "main" ]
-    pull_request:
-      branches: [ "main" ]
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.TOKEN }}
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
@@ -29,8 +32,8 @@ jobs:
     - name: Generate Application Key
       run: php artisan key:generate
 
-  # - name: Run Database Migrations
-  #   run: php artisan migrate --force
+    # - name: Run Database Migrations
+    #   run: php artisan migrate --force
 
     - name: Run PHPUnit Tests
       run: vendor/bin/phpunit
