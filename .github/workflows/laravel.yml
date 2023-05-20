@@ -8,7 +8,7 @@ on:
 
 env:
   DB_CONNECTION: mysql
-  DB_HOST: ${{ secrets.DB_SECRET }}
+  DB_HOST: ${{ secrets.DB_HOST }}
   DB_PORT: ${{ secrets.DB_PORT }}
   DB_DATABASE: ${{ secrets.DB_DATABASE }}
   DB_USERNAME: ${{ secrets.DB_USERNAME }}
@@ -19,7 +19,11 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          repository: 'Elsilaves/road_mgmt'
+          token: ${{ secrets.GIT_TOKEN }}
+          ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -60,8 +64,8 @@ jobs:
             sudo systemctl restart apache2
             curl -sS https://getcomposer.org/installer | php 
             sudo mv composer.phar /usr/local/bin/composer
-
-            sudo sh -c 'echo "<VirtualHost *:80>
+            sudo nano /etc/apache2/sites-available/laravel.conf
+            echo "<VirtualHost *:80>
                 ServerAdmin admin@example.com
                 ServerName mydomain.com
                 DocumentRoot /var/www/html/road_mgmt/public
@@ -74,20 +78,16 @@ jobs:
 
                 ErrorLog ${APACHE_LOG_DIR}/error.log
                 CustomLog ${APACHE_LOG_DIR}/access.log combined
-            </VirtualHost>" > /etc/apache2/sites-available/road_mgmt.conf'
-
+            </VirtualHost>" > /etc/apache2/sites-available/laravel.conf
             sudo a2enmod rewrite
-            sudo a2ensite road_mgmt.conf
+            sudo a2ensite laravel.conf
             sudo systemctl restart apache2
-
             git clone git@github.com:Elsilaves/road_mgmt.git /var/www/html/road_mgmt
             cd /var/www/html/road_mgmt
             composer install --no-dev
-
             sudo chown -R www-data:www-data /var/www/html/road_mgmt
             sudo chmod -R 775 /var/www/html/road_mgmt
             sudo chmod -R 775 /var/www/html/road_mgmt/storage
             sudo chmod -R 775 /var/www/html/road_mgmt/bootstrap/cache
-
             cp .env.example .env
             php artisan key:generate
