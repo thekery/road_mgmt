@@ -37,8 +37,11 @@ class RestrictionSeeder extends Seeder
                 'todate' => $fields[5],
                 'namingid' => $fields[6],
                 'extentid' => $fields[7],
-                'speed' => isset($fields[8]) ? substr($fields[8], 0, 10) : null, // Truncate the speed value to fit the column length
+                'speed' => isset($fields[8]) && $fields[8] !== '' ? trim($fields[8]) : null,
             ];
+
+
+            
 
             $existingRecord = DB::table('restrictions')
                 ->where($restriction)
