@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TraficRestrictionController;
 
 
 
@@ -36,9 +37,7 @@ Route::get('/info', function () {
     return view('info');
 });
 
-Route::get('/traficrestriction', function () {
-    return view('traficrestriction');
-});
+Route::get('/traficrestriction', [TraficRestrictionController::class, 'index'])->name('traficrestriction.index');
 
 Route::get('/register', function () {
     return view('register');
@@ -57,3 +56,4 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+

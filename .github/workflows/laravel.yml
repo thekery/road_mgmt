@@ -58,6 +58,9 @@ jobs:
             php artisan key:generate"
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo chown -R www-data:www-data /var/www/html/road_mgmt && sudo chmod -R 755 /var/www/html/road_mgmt/storage /var/www/html/road_mgmt/bootstrap"
         rm private_key.pem
+
+  # Add the sql config 
+  #install Mysql:  sudo apt install mysql-client-core-8.0
     
    # - name: Update Apache Config
    #   run: |
