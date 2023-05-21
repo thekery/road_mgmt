@@ -46,7 +46,7 @@ jobs:
         echo "${{ secrets.Pem_Key }}" > private_key.pem
         chmod 600 private_key.pem
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo rm -rf /var/www/html/*"
-        rsync -av -e "ssh -o StrictHostKeyChecking=no -i private_key.pem" --exclude '.git' . ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/var/www/html/ --rsync-path="sudo rsync"
+        rsync -av -e "ssh -o StrictHostKeyChecking=no -i private_key.pem" --exclude '.git' . ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }}:/var/www/html/road_mgmt --rsync-path="sudo rsync"
         ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "sudo chown -R www-data:www-data /var/www/html/road_mgmt && sudo chmod -R 755 /var/www/html/road_mgmt/storage /var/www/html/road_mgmt/bootstrap"
         rm private_key.pem
 
