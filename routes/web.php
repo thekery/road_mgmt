@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
-
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
 
 
 
@@ -40,15 +42,18 @@ Route::get('/traficrestriction', function () {
 
 Route::get('/register', function () {
     return view('register');
-});
-
-Route::get('/login', function () {
-    return view('login');
-});
-
-Route::get('/register', function () {
-    return view('register');
 })->name('register.view');
 
 Route::post('/register', [RegisterController::class, 'register'])->name('register');
 
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login.view');
+Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+
+Route::post('/logout', function () {
+    Auth::logout();
+    return redirect('/');
+})->name('logout');
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
