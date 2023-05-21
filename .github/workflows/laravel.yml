@@ -60,6 +60,7 @@ jobs:
         rm private_key.pem
 
   # Add the sql config 
+  #install Mysql:  sudo apt install mysql-client-core-8.0
     
    # - name: Update Apache Config
    #   run: |
